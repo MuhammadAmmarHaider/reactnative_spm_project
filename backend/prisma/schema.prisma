@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ===================== USERS =====================
+model User {
+  id           Int          @id @default(autoincrement())
+  firstName    String?
+  lastName     String?
+  email        String       @unique
+  passwordHash String
+  bio          String?
+  avatarUrl    String?
+  location     String?
+  availability Availability @default(NOT_AVAILABLE)
+  memberships   Membership[]
+  applications  Application[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+
+  projectsOwned Project[]   @relation("OwnedProjects")
+}
+
+enum Availability {
+  FULL_TIME
+  PART_TIME
+  NOT_AVAILABLE
+}
+
+
+
+// ===================== PROJECTS =====================
+model Project {
+  id             Int        @id @default(autoincrement())
+  title          String
+  description    String
+  category       String
+  tags           String[]
+  requiredSkills String[]
+  startDate      DateTime?
+  endDate        DateTime?
+  archived       Boolean    @default(false)
+  ownerId      Int
+  memberships  Membership[]
+  applications Application[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+
+  owner        User         @relation("OwnedProjects", fields: [ownerId], references: [id])
+}
+
+// ===================== MEMBERSHIPS =====================
+model Membership {
+  id        Int      @id @default(autoincrement())
+  role      String   // e.g., "Owner", "Contributor"
+  status    String   @default("active")
+  userId    Int
+  projectId Int
+  joinedAt  DateTime @default(now())
+
+
+  user      User     @relation(fields: [userId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+// ===================== APPLICATIONS =====================
+model Application {
+  id          Int               @id @default(autoincrement())
+  coverLetter String?
+  status      ApplicationStatus @default(PENDING)
+  userId    Int
+  projectId Int
+  createdAt   DateTime          @default(now())
+
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
