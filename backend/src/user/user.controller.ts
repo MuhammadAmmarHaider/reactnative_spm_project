@@ -3,7 +3,7 @@ import { UserService } from './user.service';
 import { GetUser } from '../auth/decorator';
 import type { User } from '../../generated/prisma';
 import { EditUserDto } from './dto';
-import { JwtGuard } from '../auth/guard';
+import { Jwt2faGuard, JwtGuard } from '../auth/guard';
 
 @UseGuards(JwtGuard)
 @Controller('users')
@@ -19,5 +19,15 @@ export class UserController {
     getMe(@GetUser() user: User,@GetUser('email') email:string) {
         console.log('user email is ',email);
         return user;
+    }
+    
+    // this endpoint requires full 2FA authentication
+    @UseGuards(Jwt2faGuard)
+    @Get('sensitive-data')
+    getSensitiveData(@GetUser() user: User) {
+        return {
+            message: 'This is sensitive data',
+            user,
+        };
     }
 }
