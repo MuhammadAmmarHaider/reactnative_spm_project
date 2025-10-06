@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, TwoFactorCodeDto } from './dto';
+import { AuthDto, ResendOtpDto, TwoFactorCodeDto, VerifyEmailDto } from './dto';
 import { JwtGuard , Jwt2faGuard} from './guard';
 
 @Controller('auth')
@@ -16,6 +16,20 @@ export class AuthController {
     @Post('signin')
     signin(@Body() dto: AuthDto) {
         return this.authService.signin(dto);
+    }
+
+    
+    @Post('verify-email')
+    @HttpCode(HttpStatus.OK)
+    verifyEmail(@Body() dto: VerifyEmailDto) {
+        return this.authService.verifyEmail(dto.email, dto.otp);
+    }
+
+
+    @Post('resend-otp')
+    @HttpCode(HttpStatus.OK)
+    resendOtp(@Body() dto: ResendOtpDto) {
+        return this.authService.resendVerificationOtp(dto.email);
     }
 
     @Post('2fa/generate')
