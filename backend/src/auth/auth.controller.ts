@@ -1,7 +1,8 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, TwoFactorCodeDto } from './dto';
 import { JwtGuard , Jwt2faGuard} from './guard';
+import { EmailInUseDto } from './dto/email.in.user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -79,6 +80,15 @@ export class AuthController {
         return {
             message: '2FA has been disabled',
         };
+    }
+
+
+    @Get('email')
+    @HttpCode(HttpStatus.OK)
+    async isEmailInUse(@Body() dto : EmailInUseDto){
+        return {
+            available: await this.authService.isEmailInUse(dto.email)
+        }
     }
 
 }

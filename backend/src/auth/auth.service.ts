@@ -4,7 +4,7 @@ import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import {PrismaClientKnownRequestError} from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { User } from 'generated/prisma/client';
 import { authenticator } from 'otplib';
 import { UserService } from '../user/user.service';
@@ -12,12 +12,12 @@ import { toDataURL } from 'qrcode';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService,private jwt:JwtService,private config:ConfigService,private userService: UserService) {}
+    constructor(private prisma: PrismaService, private jwt: JwtService, private config: ConfigService, private userService: UserService) { }
 
     async generateTwoFactorAuthenticationSecret(user: User) {
         const secret = authenticator.generateSecret();
         const otpauthUrl = authenticator.keyuri(
-            user.email, 
+            user.email,
             this.config.get('TWO_FACTOR_AUTHENTICATION_APP_NAME') || 'MyApp',
             secret);
         await this.userService.setTwoFactorAuthenticationSecret(secret, user.id);
@@ -31,7 +31,7 @@ export class AuthService {
         if (!user.twoFactorAuthenticationSecret) {
             return false;
         }
-        
+
         return authenticator.verify({
             token: twoFactorAuthenticationCode,
             secret: user.twoFactorAuthenticationSecret,
@@ -66,25 +66,24 @@ export class AuthService {
     }
 
     async signup(dto: AuthDto) {
-        try{
-            const hash = await  argon.hash(dto.password);
+        try {
+            const hash = await argon.hash(dto.password);
             const user = await this.prisma.user.create({
-                data:{
-                    email:dto.email,
-                    passwordHash:hash,
+                data: {
+                    email: dto.email,
+                    passwordHash: hash,
                 }
             });
-            return this.signToken(user.id,user.email, false, false);
+            return this.signToken(user.id, user.email, false, false);
 
-        } catch(error){
-            if(error instanceof PrismaClientKnownRequestError)
-            {
-                if(error.code === 'P2002'){
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
                     // this error code is for the unique constraint violation
                     throw new ForbiddenException('Email already exists');
                 }
             }
-            throw error; 
+            throw error;
         }
     }
     async signin(dto: AuthDto) {
@@ -93,31 +92,40 @@ export class AuthService {
                 email: dto.email,
             },
         });
-        if(!user) throw new ForbiddenException('User does not exist');
-        const isMatch = await argon.verify(user.passwordHash,dto.password);
-        if(!isMatch) throw new ForbiddenException('Invalid password');
-        return this.signToken(user.id,user.email, user.isTwoFactorAuthenticationEnabled, false);
+        if (!user) throw new ForbiddenException('User does not exist');
+        const isMatch = await argon.verify(user.passwordHash, dto.password);
+        if (!isMatch) throw new ForbiddenException('Invalid password');
+        return this.signToken(user.id, user.email, user.isTwoFactorAuthenticationEnabled, false);
     }
     async signToken(
-        userId:number,
-        email:string,
+        userId: number,
+        email: string,
         isTwoFactorAuthenticationEnabled: boolean,
         isTwoFactorAuthenticated: boolean
-    ):Promise<{access_token:string;isTwoFactorAuthenticationEnabled?: boolean}> {
+    ): Promise<{ access_token: string; isTwoFactorAuthenticationEnabled?: boolean }> {
         const payload = {
-            sub:userId,
+            sub: userId,
             email,
             isTwoFactorAuthenticationEnabled,
             isTwoFactorAuthenticated,
         };
         const secret = this.config.get('JWT_SECRET');
-        const token = await this.jwt.signAsync(payload,{
-            expiresIn:'1h',
-            secret:secret,
+        const token = await this.jwt.signAsync(payload, {
+            expiresIn: '1h',
+            secret: secret,
         });
         return {
             access_token: token,
             isTwoFactorAuthenticationEnabled,
         };
+    }
+
+
+    async isEmailInUse(email: string): Promise<boolean> {
+        const user = await this.prisma.user.findFirst({
+            where: { email },
+            select: { id: true },
+        });
+        return !!user;
     }
 }
