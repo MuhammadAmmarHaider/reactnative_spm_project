@@ -28,6 +28,7 @@ model User {
   availability Availability @default(NOT_AVAILABLE)
   memberships   Membership[]
   applications  Application[]
+  phoneNumber  String?      @unique
 
   twoFactorAuthenticationSecret String?
   isTwoFactorAuthenticationEnabled Boolean @default(false)

@@ -89,6 +89,9 @@ export class AuthService {
                     emailVerificationToken: otp,
                     emailVerificationExpires: otpExpiry,
                     isEmailVerified: false,
+                    phoneNumber: dto.phoneNumber,
+                    firstName: dto.firstName,
+                    lastName: dto.lastName,
                 },
             });
 
@@ -158,6 +161,7 @@ export class AuthService {
         }
 
         if (OtpUtil.isExpired(user.emailVerificationExpires as Date)) {
+            await this.resendVerificationOtp(email);
             throw new BadRequestException('OTP has expired. Please request a new one.');
         }
 
