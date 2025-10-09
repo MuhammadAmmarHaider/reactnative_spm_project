@@ -1,5 +1,4 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -11,6 +10,7 @@ import { UserService } from '../user/user.service';
 import { toDataURL } from 'qrcode';
 import { EmailService } from '../email/email.service';
 import { OtpUtil } from 'src/common/utils/otp.util';
+import { SignInDto, SignupDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -63,7 +63,7 @@ export class AuthService {
         });
     }
 
-    async loginWith2fa(user: User) {
+    async loginWith2fa(user: User): Promise<{ access_token: string; isTwoFactorAuthenticationEnabled?: boolean }> {
         return this.signToken(
             user.id,
             user.email,
@@ -72,10 +72,10 @@ export class AuthService {
         );
     }
 
-    async signup(dto: AuthDto) {
+    async signup(dto: SignupDto) {
         try {
             const userExists = await this.prisma.user.findFirst({ where: { email: dto.email } });
-            if(userExists)
+            if (userExists)
                 throw new ConflictException('Email Already in user');
 
             const hash = await argon.hash(dto.password);
@@ -115,7 +115,8 @@ export class AuthService {
         }
     }
 
-    async signin(dto: AuthDto) {
+    async signin(dto: SignInDto):
+        Promise<{ access_token: string; isTwoFactorAuthenticationEnabled?: boolean }> {
         const user = await this.prisma.user.findUnique({
             where: {
                 email: dto.email,
@@ -128,8 +129,9 @@ export class AuthService {
 
         // Check if email is verified
         if (!user.isEmailVerified) {
+            await this.resendVerificationOtp(dto.email);
             throw new ForbiddenException(
-                'Please verify your email before signing in. Check your inbox for the OTP.'
+                'Please verify your email before signing in. Check your inbox for the new OTP.'
             );
         }
 
@@ -164,7 +166,6 @@ export class AuthService {
         }
 
         if (OtpUtil.isExpired(user.emailVerificationExpires as Date)) {
-            await this.resendVerificationOtp(email);
             throw new BadRequestException('OTP has expired. Please request a new one.');
         }
 

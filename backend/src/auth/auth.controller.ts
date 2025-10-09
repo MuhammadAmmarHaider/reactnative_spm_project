@@ -1,23 +1,40 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, ResendOtpDto, TwoFactorCodeDto, VerifyEmailDto } from './dto';
+import { ResendOtpDto, SignupDto, TwoFactorCodeDto, VerifyEmailDto } from './dto';
 import { JwtGuard, Jwt2faGuard } from './guard';
 import { EmailInUseDto } from './dto/email.in.user.dto';
+import { SignInDto } from './dto/signin.dto';
+import { FetchUserDataDto } from './dto/fetch.user.data.dto';
 
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('signup')
-    signup(@Body() dto: AuthDto) {
+    async signup(@Body() dto: SignupDto) {
         return this.authService.signup(dto);
     }
 
     @HttpCode(HttpStatus.OK)
     @Post('signin')
-    signin(@Body() dto: AuthDto) {
+    async signin(@Body() dto: SignInDto) {
         return this.authService.signin(dto);
     }
+
+    @UseGuards(JwtGuard)
+    @HttpCode(HttpStatus.OK)
+    @Get('my')
+    async fetchUserDataAfterSignIn(@Req() req: any) {
+        const data = req.user;
+        return {
+            firstName: data?.firstName,
+            lastName: data?.lastName,
+            phoneNumber: data?.phoneNumber,
+            email: data?.email,
+            role: 'user',
+        };
+    }
+
 
 
     @Post('verify-email')

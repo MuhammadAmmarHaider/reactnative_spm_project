@@ -15,8 +15,10 @@ export class EmailService {
                 user: this.config.get('MAIL_USER'),
                 pass: this.config.get('MAIL_PASSWORD'),
             },
+            tls: {
+                rejectUnauthorized: false, // <-- ADD THIS LINE
+            },
         };
-        console.log(temp);
         this.transporter = nodemailer.createTransport(temp);
     }
 
