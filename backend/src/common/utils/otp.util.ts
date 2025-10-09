@@ -1,5 +1,5 @@
 export class OtpUtil {
-    static generateOTP(length: number = 6): string {
+    static generateOTP(length: number = 4): string {
         const digits = '0123456789';
         let otp = '';
         

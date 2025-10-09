@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,10 +16,10 @@ import { OtpUtil } from 'src/common/utils/otp.util';
 export class AuthService {
     constructor(
         private prisma: PrismaService,
-        private jwt:JwtService,
-        private config:ConfigService,
+        private jwt: JwtService,
+        private config: ConfigService,
         private userService: UserService,
-        private emailService: EmailService,) {}
+        private emailService: EmailService,) { }
 
     async generateTwoFactorAuthenticationSecret(user: User) {
         const secret = authenticator.generateSecret();
@@ -74,8 +74,11 @@ export class AuthService {
 
     async signup(dto: AuthDto) {
         try {
+            const userExists = await this.prisma.user.findFirst({ where: { email: dto.email } });
+            if(userExists)
+                throw new ConflictException('Email Already in user');
+
             const hash = await argon.hash(dto.password);
-            
             // Generate OTP for email verification
             const otp = OtpUtil.generateOTP();
             const otpExpiry = OtpUtil.getExpiryTime(
@@ -247,6 +250,6 @@ export class AuthService {
             where: { email },
             select: { id: true },
         });
-        return !!user;
+        return user === null;
     }
 }

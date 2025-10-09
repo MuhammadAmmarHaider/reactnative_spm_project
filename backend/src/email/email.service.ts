@@ -7,7 +7,7 @@ export class EmailService {
     private transporter: nodemailer.Transporter;
 
     constructor(private config: ConfigService) {
-        this.transporter = nodemailer.createTransport({
+        const temp = {
             host: this.config.get('MAIL_HOST'),
             port: this.config.get('MAIL_PORT'),
             secure: false, // true for 465, false for other ports
@@ -15,7 +15,9 @@ export class EmailService {
                 user: this.config.get('MAIL_USER'),
                 pass: this.config.get('MAIL_PASSWORD'),
             },
-        });
+        };
+        console.log(temp);
+        this.transporter = nodemailer.createTransport(temp);
     }
 
     async sendVerificationEmail(email: string, otp: string) {
