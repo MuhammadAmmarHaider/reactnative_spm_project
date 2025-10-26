@@ -6,13 +6,16 @@ import { LoggingInterceptor } from './common/logger/LogginInterceptor';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      transform:true
     }),
   );
 
-  app.useGlobalInterceptors(new LoggingInterceptor());
+
   await app.listen(3333);
   console.log('backend is running on port 3333');
 

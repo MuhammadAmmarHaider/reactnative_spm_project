@@ -5,6 +5,8 @@ import { JwtGuard, Jwt2faGuard } from './guard';
 import { EmailInUseDto } from './dto/email.in.user.dto';
 import { SignInDto } from './dto/signin.dto';
 import { FetchUserDataDto } from './dto/fetch.user.data.dto';
+import { GetUser } from './decorator';
+import type { User } from 'generated/prisma';
 
 @Controller('auth')
 export class AuthController {
@@ -24,18 +26,16 @@ export class AuthController {
     @UseGuards(JwtGuard)
     @HttpCode(HttpStatus.OK)
     @Get('my')
-    async fetchUserDataAfterSignIn(@Req() req: any) {
-        const data = req.user;
+    async fetchUserDataAfterSignIn(@GetUser() user: User) {
         return {
-            firstName: data?.firstName,
-            lastName: data?.lastName,
-            phoneNumber: data?.phoneNumber,
-            email: data?.email,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            phoneNumber: user?.phoneNumber,
+            email: user?.email,
+            isOnboarded: user?.isOnboarded,
             role: 'user',
         };
     }
-
-
 
     @Post('verify-email')
     @HttpCode(HttpStatus.OK)

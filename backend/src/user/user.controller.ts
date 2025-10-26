@@ -8,19 +8,18 @@ import { Jwt2faGuard, JwtGuard } from '../auth/guard';
 @UseGuards(JwtGuard)
 @Controller('users')
 export class UserController {
-    constructor(private userService: UserService) {}
+    constructor(private userService: UserService) { }
 
     @Patch('me')
-    updateUser(@GetUser('id') userId:number,@Body() dto:EditUserDto) {
-        return this.userService.updateUser(userId,dto);
+    updateUser(@GetUser('id') userId: number, @Body() dto: EditUserDto) {
+        return this.userService.updateUser(userId, dto);
     }
 
     @Get('me')
-    getMe(@GetUser() user: User,@GetUser('email') email:string) {
-        console.log('user email is ',email);
+    getMe(@GetUser() user: User) {
         return user;
     }
-    
+
     // this endpoint requires full 2FA authentication
     @UseGuards(Jwt2faGuard)
     @Get('sensitive-data')

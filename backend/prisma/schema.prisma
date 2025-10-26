@@ -14,34 +14,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // ===================== USERS =====================
 model User {
-  id           Int          @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   firstName    String?
   lastName     String?
-  email        String       @unique
+  email        String        @unique
   passwordHash String
   bio          String?
   avatarUrl    String?
   location     String?
-  availability Availability @default(NOT_AVAILABLE)
-  memberships   Membership[]
-  applications  Application[]
-  phoneNumber  String?      @unique
+  isOnboarded  Boolean       @default(false)
+  availability Availability  @default(NOT_AVAILABLE)
+  memberships  Membership[]
+  applications Application[]
+  phoneNumber  String?       @unique
 
-  twoFactorAuthenticationSecret String?
+  twoFactorAuthenticationSecret    String?
   isTwoFactorAuthenticationEnabled Boolean @default(false)
 
-  isEmailVerified Boolean @default(false)
-  emailVerificationToken String?
+  isEmailVerified          Boolean   @default(false)
+  emailVerificationToken   String?
   emailVerificationExpires DateTime?
 
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-
-  projectsOwned Project[]   @relation("OwnedProjects")
+  projectsOwned       Project[]                @relation("OwnedProjects")
+  categoryPreferences UserCategoryPreference[] @relation("UserCategoryPreferences")
 }
 
 enum Availability {
@@ -50,41 +50,55 @@ enum Availability {
   NOT_AVAILABLE
 }
 
+model Category {
+  id              Int                      @id @default(autoincrement())
+  name            String                   @unique
+  projects        Project[]
+  userPreferences UserCategoryPreference[]
+}
 
+model UserCategoryPreference {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  categoryId Int
+  user       User     @relation("UserCategoryPreferences", fields: [userId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId])
+}
 
 // ===================== PROJECTS =====================
 model Project {
-  id             Int        @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   title          String
   description    String
   category       String
+  categoryEntity Category      @relation(fields: [category], references: [name])
   tags           String[]
   requiredSkills String[]
   startDate      DateTime?
   endDate        DateTime?
-  archived       Boolean    @default(false)
-  ownerId      Int
-  memberships  Membership[]
-  applications Application[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  archived       Boolean       @default(false)
+  ownerId        Int
+  memberships    Membership[]
+  applications   Application[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-
-  owner        User         @relation("OwnedProjects", fields: [ownerId], references: [id])
+  owner User @relation("OwnedProjects", fields: [ownerId], references: [id])
 }
 
 // ===================== MEMBERSHIPS =====================
 model Membership {
   id        Int      @id @default(autoincrement())
-  role      String   // e.g., "Owner", "Contributor"
+  role      String // e.g., "Owner", "Contributor"
   status    String   @default("active")
   userId    Int
   projectId Int
   joinedAt  DateTime @default(now())
 
-
-  user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 
   @@unique([userId, projectId])
 }
@@ -94,12 +108,12 @@ model Application {
   id          Int               @id @default(autoincrement())
   coverLetter String?
   status      ApplicationStatus @default(PENDING)
-  userId    Int
-  projectId Int
+  userId      Int
+  projectId   Int
   createdAt   DateTime          @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 }
 
 enum ApplicationStatus {
@@ -108,4 +122,3 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
 }
-

@@ -19,14 +19,21 @@ export class AuthService {
         private jwt: JwtService,
         private config: ConfigService,
         private userService: UserService,
-        private emailService: EmailService,) { }
+        private emailService: EmailService
+    ) { }
+
+    async getUserDataAfterSignIn(userId: number){
+        
+    }
+
 
     async generateTwoFactorAuthenticationSecret(user: User) {
         const secret = authenticator.generateSecret();
         const otpauthUrl = authenticator.keyuri(
             user.email,
             this.config.get('TWO_FACTOR_AUTHENTICATION_APP_NAME') || 'MyApp',
-            secret);
+            secret
+        );
         await this.userService.setTwoFactorAuthenticationSecret(secret, user.id);
         return { secret, otpauthUrl };
     }
