@@ -34,6 +34,7 @@ export class AuthController {
             email: user?.email,
             isOnboarded: user?.isOnboarded,
             role: 'user',
+            isTwoFactorAuthenticationEnabled: user?.isTwoFactorAuthenticationEnabled
         };
     }
 
