@@ -53,11 +53,12 @@ export class AuthController {
 
     @Post('2fa/generate')
     @UseGuards(JwtGuard)
-    async generate2faQrCode(@Req() req) {
-        const { otpauthUrl } = await this.authService.generateTwoFactorAuthenticationSecret(req.user);
+    async generate2faQrCode(@GetUser() user: User) {
+        const { otpauthUrl } = await this.authService.generateTwoFactorAuthenticationSecret(user);
 
         return {
             qrCode: await this.authService.generateQrCodeDataUrl(otpauthUrl),
+            authUrl: otpauthUrl
         };
     }
 
@@ -88,29 +89,31 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtGuard)
     async authenticate(
-        @Req() req,
+        @GetUser() user: User,
         @Body() { twoFactorAuthenticationCode }: TwoFactorCodeDto,
     ) {
         const isCodeValid = this.authService.isTwoFactorAuthenticationCodeValid(
             twoFactorAuthenticationCode,
-            req.user,
+            user,
         );
 
         if (!isCodeValid) {
             throw new UnauthorizedException('Wrong authentication code');
         }
 
-        return this.authService.loginWith2fa(req.user);
+        return this.authService.loginWith2fa(user);
     }
 
     @Post('2fa/turn-off')
     @HttpCode(HttpStatus.OK)
     @UseGuards(Jwt2faGuard)
-    async turnOffTwoFactorAuthentication(@Req() req) {
-        await this.authService.turnOffTwoFactorAuthentication(req.user.id);
-
+    async turnOffTwoFactorAuthentication(@GetUser() user: User) {
+        console.log({isTwoFactorAuthenticationEnabled: user.isTwoFactorAuthenticationEnabled})
+        await this.authService.turnOffTwoFactorAuthentication(user.id);
         return {
             message: '2FA has been disabled',
+            data: null,
+            success: true
         };
     }
 

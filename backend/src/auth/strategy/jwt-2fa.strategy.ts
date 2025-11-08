@@ -16,8 +16,8 @@ export class Jwt2faStrategy extends PassportStrategy(Strategy, 'jwt-2fa') {
         });
     }
 
-    async validate(payload: { 
-        sub: number; 
+    async validate(payload: {
+        sub: number;
         email: string;
         isTwoFactorAuthenticationEnabled: boolean;
         isTwoFactorAuthenticated: boolean;
@@ -29,16 +29,16 @@ export class Jwt2faStrategy extends PassportStrategy(Strategy, 'jwt-2fa') {
         });
 
         if (!user) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException('Unauthorized: No user found.');
         }
 
         // If 2FA is not enabled, return user
         if (!user.isTwoFactorAuthenticationEnabled) {
-            return user;
+            throw new UnauthorizedException('2FA authentication required');
         }
 
         // If 2FA is enabled, check if user completed 2FA authentication
-        if (payload.isTwoFactorAuthenticated) {
+        if (payload.isTwoFactorAuthenticationEnabled) {
             return user;
         }
 
