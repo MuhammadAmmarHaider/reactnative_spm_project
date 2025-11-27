@@ -8,6 +8,13 @@ export class ProjectService {
 
   async createProject(userId: number, dto: CreateProjectDto) {
     try {
+      // Ensure category exists, create if it doesn't
+      await this.prisma.category.upsert({
+        where: { name: dto.category },
+        update: {},
+        create: { name: dto.category },
+      });
+
       const project = await this.prisma.project.create({
         data: {
           title: dto.title,
