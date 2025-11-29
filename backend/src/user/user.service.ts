@@ -12,6 +12,33 @@ export class UserService {
             data: { twoFactorAuthenticationSecret: secret },
         });
     }
+    async getAllUsers(currentUserId: number) {
+    return this.prisma.user.findMany({
+        where: {
+            NOT: { id: currentUserId },   // exclude yourself
+        },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            isOnboarded: true
+        },
+    });
+}   async findAllExcept(currentUserId: number) {
+  return this.prisma.user.findMany({
+    where: {
+      NOT: { id: currentUserId },
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
+  });
+}
+
 
     findOne(email: string) {
         return this.prisma.user.findUnique({

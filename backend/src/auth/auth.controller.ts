@@ -28,6 +28,7 @@ export class AuthController {
     @Get('my')
     async fetchUserDataAfterSignIn(@GetUser() user: User) {
         return {
+            id: user.id,
             firstName: user?.firstName,
             lastName: user?.lastName,
             phoneNumber: user?.phoneNumber,
@@ -116,6 +117,7 @@ export class AuthController {
             success: true
         };
     }
+
 
 
     @Post('email')
