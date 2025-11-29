@@ -105,12 +105,15 @@ model Membership {
 
 // ===================== APPLICATIONS =====================
 model Application {
-  id          Int               @id @default(autoincrement())
-  coverLetter String?
-  status      ApplicationStatus @default(PENDING)
-  userId      Int
-  projectId   Int
-  createdAt   DateTime          @default(now())
+  id               Int               @id @default(autoincrement())
+  role             String // e.g., "Developer", "Designer", "Project Manager"
+  skills           String[] // Array of skills/expertise
+  reasonForJoining String? // Motivation and interests
+  availability     String? // e.g., "Part-time", "Full-time", "Specific hours"
+  status           ApplicationStatus @default(PENDING)
+  userId           Int
+  projectId        Int
+  createdAt        DateTime          @default(now())
 
   user    User    @relation(fields: [userId], references: [id])
   project Project @relation(fields: [projectId], references: [id])
