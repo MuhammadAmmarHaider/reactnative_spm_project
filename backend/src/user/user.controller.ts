@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { GetUser } from '../auth/decorator';
 import type { User } from '../../generated/prisma';
-import { EditUserDto } from './dto';
+import { EditUserDto, UpdateProfileDto } from './dto';
 import { Jwt2faGuard, JwtGuard } from '../auth/guard';
 
 @UseGuards(JwtGuard)
@@ -28,5 +28,21 @@ export class UserController {
             message: 'This is sensitive data',
             user,
         };
+    }
+
+    @UseGuards(Jwt2faGuard)
+    @Patch('avatarUrl')
+    async updateAvatarUrl(@GetUser('id') userId: number, @Body('avatarUrl') avatarUrl: string) {
+        const updatedUser = await this.userService.updateAvatarUrl(userId, avatarUrl);
+
+        return {
+            avatarUrl: updatedUser.avatarUrl,
+        };
+    }
+    @UseGuards(Jwt2faGuard)
+    @Patch('profile')
+    async updateProfile(@GetUser('id') userId: number, @Body() body: UpdateProfileDto) {
+        const updatedUser = await this.userService.updateProfile(userId, body);
+        return updatedUser;
     }
 }

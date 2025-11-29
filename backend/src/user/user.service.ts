@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EditUserDto } from './dto';
+import { EditUserDto, UpdateProfileDto } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UserService {
-    constructor(private prisma: PrismaService) {}
+
+    constructor(private prisma: PrismaService) { }
 
     async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
         return this.prisma.user.update({
@@ -25,7 +27,7 @@ export class UserService {
         });
     }
 
-    updateUser(userId:number,dto: EditUserDto) {
+    updateUser(userId: number, dto: EditUserDto) {
         const user = this.prisma.user.update({
             where: {
                 id: userId,
@@ -36,5 +38,25 @@ export class UserService {
         });
         delete (user as any).passwordHash;
         return user;
+    }
+
+    async updateAvatarUrl(userId: number, avatarUrl: string): Promise<User> {
+        return await this.prisma.user.update({
+            where: { id: userId },
+            data: { avatarUrl: avatarUrl },
+        });
+    }
+    
+    async updateProfile(userId: number, updates: UpdateProfileDto) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: updates,
+            select: {
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                email: true
+            }
+        });
     }
 }
