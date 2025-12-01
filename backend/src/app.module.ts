@@ -7,6 +7,9 @@ import { EmailModule } from './email/email.module';
 import { ProjectModule } from './project/project.module';
 import { CategoryModule } from './category/category.module';
 import { ChatModule } from './chat/chat.module';
+import { ApplicationModule } from './application/application.module';
+import { TaskModule } from './task/task.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -17,6 +20,8 @@ import { ChatModule } from './chat/chat.module';
     ProjectModule,
     CategoryModule,
     ChatModule,
+    ApplicationModule,
+    TaskModule,
   ],
 })
 export class AppModule {}

@@ -42,6 +42,10 @@ model User {
 
   projectsOwned       Project[]                @relation("OwnedProjects")
   categoryPreferences UserCategoryPreference[] @relation("UserCategoryPreferences")
+
+  tasksAssigned       Task[]                   @relation("AssignedTasks")
+  tasksCreated        Task[]                   @relation("CreatedTasks")
+  taskComments        TaskComment[]
 }
 
 enum Availability {
@@ -82,6 +86,9 @@ model Project {
   ownerId        Int
   memberships    Membership[]
   applications   Application[]
+
+  tasks          Task[]
+
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -105,12 +112,15 @@ model Membership {
 
 // ===================== APPLICATIONS =====================
 model Application {
-  id          Int               @id @default(autoincrement())
-  coverLetter String?
-  status      ApplicationStatus @default(PENDING)
-  userId      Int
-  projectId   Int
-  createdAt   DateTime          @default(now())
+  id               Int               @id @default(autoincrement())
+  role             String // e.g., "Developer", "Designer", "Project Manager"
+  skills           String[] // Array of skills/expertise
+  reasonForJoining String? // Motivation and interests
+  availability     String? // e.g., "Part-time", "Full-time", "Specific hours"
+  status           ApplicationStatus @default(PENDING)
+  userId           Int
+  projectId        Int
+  createdAt        DateTime          @default(now())
 
   user    User    @relation(fields: [userId], references: [id])
   project Project @relation(fields: [projectId], references: [id])
@@ -121,4 +131,64 @@ enum ApplicationStatus {
   ACCEPTED
   REJECTED
   WITHDRAWN
+}
+
+// ===================== TASKS =====================
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  
+  // Relations
+  projectId   Int
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assigneeId  Int?
+  assignee    User?      @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  
+  createdById Int
+  createdBy   User       @relation("CreatedTasks", fields: [createdById], references: [id])
+  
+  // Comments
+  comments    TaskComment[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ===================== TASK COMMENTS =====================
+model TaskComment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([authorId])
 }
